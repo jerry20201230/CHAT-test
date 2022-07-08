@@ -1,11 +1,7 @@
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const port = process.env.PORT || 3000;
-
-app.get(/js|icon/, (req, res) => {
-  res.sendFile(`${__dirname}/${req.path}`);
-});
+const port = process.env.PORT || 8080;
 
 
 app.get('/', (req, res) => {
@@ -13,7 +9,6 @@ app.get('/', (req, res) => {
 });
   var user = []
   var nickname = []
-  var UA = []
   var people = 0
   var typeing = []
 
@@ -29,18 +24,6 @@ app.get('/', (req, res) => {
     });
 
 }    
-
-function arrayRemove_val(arr, value) {
- var b = '';
- for (b in arr) {
-  if (arr[b] === value) {
-   arr.splice(b, 1);
-   break;
-  }
- }
- return arr;
-};
-
 Math.getRandomInt = function  (max) {
       return Math.floor(Math.random() * max);
     }
@@ -97,7 +80,7 @@ i = socket.id
   io.emit('people online',people)
 
   io.to(i).emit("sys-info chat message","[伺服器回應] "+ nickname.at(-1)+" ("+i+") 歡迎來到聊天室~")
- 
+  io.emit("UserList",{"userID":user,"nickname":nickname})
   socket.on('typeing', msg => {
     i = socket.id || msg
     _display = ""
@@ -143,20 +126,9 @@ i = socket.id
     io.emit('typeing', _display+" 正在輸入...")
   });
 
-  
-  /*********************/
-  socket.on('MyUA', function (msg) {
-
-    UA.push(msg.OS+"/"+msg.BR)
-     io.emit("UserList",{"userID":user,"nickname":nickname,"UA":UA})
-  });
-
-  
-  
-  
 
   socket.on('GetUsers',msg =>{
-     io.to(i).emit("UserList",{"userID":user,"nickname":nickname,"UA":UA})
+     io.to(i).emit("UserList",{"userID":user,"nickname":nickname})
   })
   socket.on('rename_nickname', msg => {
     i = socket.id
@@ -169,7 +141,7 @@ i = socket.id
     nickname[user.indexOf(i)] = msg
     io.emit("NM",user+nickname)
     io.emit('sys-info chat message', _nic+" ("+i+") 已更改暱稱為: "+msg);
-    io.emit("UserList",{"userID":user,"nickname":nickname,"UA":UA})
+    io.emit("UserList",{"userID":user,"nickname":nickname})
     }
 
   });
@@ -179,7 +151,6 @@ i = socket.id
     i = socket.id
  
     typeing =  arrayRemove(typeing,i)
-    
     _display = ""
 
      console.log(typeing)
@@ -199,15 +170,11 @@ i = socket.id
     people -= 1
     io.emit('people online',people)
    let _nickname = nickname[user.indexOf(i)]
-   
    user =  arrayRemove(user,socket.id)
    nickname = arrayRemove(nickname,_nickname)
-    UA = arrayRemove_val(UA,user.indexOf(i))
-   
    console.log(user)
    console.log(nickname)
-    console.log(UA)
-   io.emit("UserList",{"userID":user,"nickname":nickname,"UA":UA})
+   io.emit("UserList",{"userID":user,"nickname":nickname})
     
    })
   
